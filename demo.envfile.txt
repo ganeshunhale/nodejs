@@ -1,5 +1,5 @@
 PORT=8000
-MONGODB_URI=mongodb+srv://ganeshunhale55:Ganesh55@cluster0.wdino.mongodb.net
+MONGODB_URI=mongodb+srv://ganeshunhale55:Ganesh55@cluster0.wdino.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 CORS_ORIGIN=*
 ACCESS_TOKEN_SECRET=d003f402cc09047cb2f8c0bada0ccc95ffa06853e50710b4078b7610bbe06efb
 ACCESS_TOKEN_EXPIRES_IN=1d
