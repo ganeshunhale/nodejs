@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
-
+import jwt from "jsonwebtoken"
 
 const generateAccessTokenAndRefereshToken = async(userId)=>{
 try {
@@ -121,8 +121,6 @@ if(!user){
 }
 console.log(user);
 
-console.log(user instanceof User); // Should print: true
-console.log(typeof user.isPasswordMatch); // Should print: function
 const isPasswordValid = await user.isPasswordMatch(password)
 if (!isPasswordValid) {
     throw new ApiError(401,"invald user credentials")
@@ -151,8 +149,10 @@ return res.status(200)
 
 });
 
-const LogOutUser = asyncHandler(async (req,res)=>{
+const LogOutUser = asyncHandler(async (req,res)=>{ 
     try {
+
+        //req.user is being added from middleware auth (VerifyJWt)
         const user =req.user
         const updateuser=await User.findByIdAndUpdate(user._id,{
 
@@ -187,9 +187,42 @@ const LogOutUser = asyncHandler(async (req,res)=>{
     }
 
 })
+
+const refreshTokenForAccessToken = asyncHandler(async(req,res)=>{
+
+    const RefreshToken = req.cookies?.refreshToken || req.body?.RefreshToken
+console.log(RefreshToken);
+   try {
+ 
+     const verifiedToken = jwt.verify(RefreshToken,process.env.REFRESH_TOKEN_SECRET)
+ 
+     const user = await User.findById(verifiedToken.id)
+     console.log("refreshtoken and found user",RefreshToken,user);
+     
+     if(!user){
+         throw new ApiError(401,"invalid refresh token")
+     }
+     if(RefreshToken != user?.refreshToken){
+         throw new ApiError(401,"failed to match token")
+     }
+     const {accessToken,refreshToken} = await generateAccessTokenAndRefereshToken(user._id)
+ 
+     const options ={
+        httpOnly:true,
+        secure :true
+     }
+     return res.status(200).cookie("accessToken",accessToken,options)
+     .cookie("refreshToken",refreshToken,options)
+     .json(new ApiResponse(200,"Accesstoken Genereated"))
+     
+   } catch (error) {
+    throw new ApiError(401,"failed to match refresh token")
+   }
+})
 export {
     registerUser,
     LoginUser,
-    LogOutUser
+    LogOutUser,
+    refreshTokenForAccessToken
 };
 
