@@ -190,19 +190,22 @@ const LogOutUser = asyncHandler(async (req,res)=>{
 
 const refreshTokenForAccessToken = asyncHandler(async(req,res)=>{
 
-    const RefreshToken = req.cookies?.refreshToken || req.body?.RefreshToken
-console.log(RefreshToken);
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken
+console.log(incomingRefreshToken);
+if (!incomingRefreshToken) {
+    throw new ApiError(401,"unauthorized request")
+}
    try {
  
-     const verifiedToken = jwt.verify(RefreshToken,process.env.REFRESH_TOKEN_SECRET)
+     const verifiedToken = jwt.verify(incomingRefreshToken,process.env.REFRESH_TOKEN_SECRET)
  
      const user = await User.findById(verifiedToken.id)
-     console.log("refreshtoken and found user",RefreshToken,user);
+     console.log("refreshtoken and found user",incomingRefreshToken,user);
      
      if(!user){
          throw new ApiError(401,"invalid refresh token")
      }
-     if(RefreshToken != user?.refreshToken){
+     if(incomingRefreshToken != user?.refreshToken){
          throw new ApiError(401,"failed to match token")
      }
      const {accessToken,refreshToken} = await generateAccessTokenAndRefereshToken(user._id)
