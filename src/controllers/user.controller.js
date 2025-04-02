@@ -222,10 +222,94 @@ if (!incomingRefreshToken) {
     throw new ApiError(401,"failed to match refresh token")
    }
 })
+
+const changeCurrentPassword = asyncHandler(async(req,res)=>{
+    const {oldPassword,newPassword}=req.body;
+    let user = await User.findById(req.user.id);
+    let passwordMatched = await user.isPasswordMatch(oldPassword)
+    if(!passwordMatched){
+        return new ApiError(401,"password not matched")
+    }
+    user.password = newPassword
+
+    await user.save({ validateBeforeSave:false })
+
+    return res.status(200).json(new ApiResponse(200,"password Changed Successfully"))
+
+})
+
+const getCurrentUser = asyncHandler(async(req,res)=>{
+
+    return res.status(200).json(new ApiResponse(200,"current user sent",req?.user))
+})
+
+const updateAccountDetails = asyncHandler(async(req,res)=>{
+const {fullName,email} = req.body
+if(!fullName || !email){
+    throw new ApiError(400,"All fields are required")
+}
+const user = await User.findByIdAndUpdate(req.user?.id,{
+ $set:{
+    fullName,
+    email
+ }
+},{new:true}).select("-password -refreshToken")
+
+return res.status(200).json(new ApiResponse(200,"account details updated succesfully",user))
+
+})
+
+const updateUserAvatar =asyncHandler(async(req,res)=>{
+
+    const avatarLocalFile = req.file
+if (!avatarLocalFile) {
+throw new ApiError(400,"Error uploading Avatar")
+}
+const Avatar = await uploadCloudinary(avatarLocalFile)
+
+if (!Avatar.secure_url) {
+    throw new ApiError(400,"failed to upload Avatar") 
+}
+const user = await User.findByIdAndUpdate(req.user?.id,{
+    $set:{
+        avatar:Avatar?.secure_url
+    }
+},{
+    new:true
+}).select("-password -refreshToken")
+
+return res.status(200).json(new ApiResponse(200,"Avatar changed Successfully",user))
+})
+const updateUserCover =asyncHandler(async(req,res)=>{
+
+    const CoverLocalFilePath = req.file
+if (!CoverLocalFilePath) {
+throw new ApiError(400,"Error uploading Cover Image")
+}
+const coverImage = await uploadCloudinary(CoverLocalFilePath)
+
+if (!coverImage.secure_url) {
+    throw new ApiError(400,"failed to upload Cover Image") 
+}
+const user = await User.findByIdAndUpdate(req.user?.id,{
+    $set:{
+        coverImage:coverImage?.secure_url
+    }
+},{
+    new:true
+}).select("-password -refreshToken")
+
+return res.status(200).json(new ApiResponse(200,"Cover Image changed Successfully",user))
+})
 export {
     registerUser,
     LoginUser,
     LogOutUser,
-    refreshTokenForAccessToken
+    refreshTokenForAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvatar,
+    updateUserCover
 };
 
