@@ -38,10 +38,10 @@ router.route('/update-accountDetails').post(
 
 router.route('/update-avatar').post(
     VerifyJWt,
-    upload,
+    upload.single('avatar'),
     updateUserAvatar)
 router.route('/update-cover').post(
     VerifyJWt,
-    upload,
+    upload.single('coverImage'),
     updateUserCover)
 export default router;
