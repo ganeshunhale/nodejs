@@ -7,7 +7,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET // Click 'View API Keys' above to copy your API secret
 });
 
-const uploadCloudinary = async (localFilePath) => {
+const uploadCloudinary = async (localFilePath,fileName) => {
     try {
         cloudinary.config({
             // env_variable: process.env.CLOUDINARY_URL,
@@ -18,7 +18,8 @@ const uploadCloudinary = async (localFilePath) => {
         if (!fs.existsSync(localFilePath)) {
             throw new Error(`File not found: ${localFilePath}`);
           }
-        const result = await cloudinary.uploader.upload(localFilePath, {
+        const result = await cloudinary.uploader.upload(localFilePath,  {
+            public_id:fileName,
             resource_type:"auto",
             
         });
